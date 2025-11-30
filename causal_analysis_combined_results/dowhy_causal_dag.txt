@@ -1,0 +1,97 @@
+Causal DAG Specification (DoWhy Format)
+================================================================================
+
+This DAG is used for causal identification in the DoWhy analysis.
+
+Graph Specification:
+--------------------------------------------------------------------------------
+digraph {
+    FEDFUNDS -> DGS10;
+    FEDFUNDS -> INDPRO;
+    FEDFUNDS -> MANEMP;
+    FEDFUNDS -> RRSFS;
+    FEDFUNDS -> TOTALSA;
+    FEDFUNDS -> CIVPART;
+    FEDFUNDS -> JOLTS_Job_Openings;
+    DGS10 -> INDPRO;
+    DGS10 -> MANEMP;
+    DGS10 -> RRSFS;
+    DGS10 -> TOTALSA;
+    DGS10 -> JOLTS_Job_Openings;
+    DCOILWTICO -> INDPRO;
+    DCOILWTICO -> MANEMP;
+    DCOILWTICO -> RRSFS;
+    DCOILWTICO -> TOTALSA;
+    DCOILWTICO -> JOLTS_Job_Openings;
+    INDPRO -> MANEMP;
+    INDPRO -> JOLTS_Job_Openings;
+    MANEMP -> JOLTS_Job_Openings;
+    RRSFS -> JOLTS_Job_Openings;
+    TOTALSA -> JOLTS_Job_Openings;
+    CIVPART -> JOLTS_Job_Openings;
+}
+
+Variable Descriptions:
+--------------------------------------------------------------------------------
+  CIVPART: Labor Force
+Participation (labor)
+  DCOILWTICO: Oil Price
+(WTI) (commodity)
+  DGS10: 10-Year Treasury
+Yield (monetary)
+  FEDFUNDS: Federal Funds
+Rate (monetary)
+  INDPRO: Industrial
+Production (economic_activity)
+  JOLTS_Job_Openings: JOLTS Job
+Openings (target)
+  MANEMP: Manufacturing
+Employment (economic_activity)
+  RRSFS: Real Retail
+Sales (economic_activity)
+  TOTALSA: Total Vehicle
+Sales (economic_activity)
+
+Causal Relationships:
+--------------------------------------------------------------------------------
+  CIVPART -> JOLTS_Job_Openings: Labor Supply (weight: 0.50)
+  DCOILWTICO -> INDPRO: Cost/Income
+Effect (weight: 0.60)
+  DCOILWTICO -> JOLTS_Job_Openings: Economic
+Conditions (weight: 0.50)
+  DCOILWTICO -> MANEMP: Cost/Income
+Effect (weight: 0.60)
+  DCOILWTICO -> RRSFS: Cost/Income
+Effect (weight: 0.60)
+  DCOILWTICO -> TOTALSA: Cost/Income
+Effect (weight: 0.60)
+  DGS10 -> INDPRO: Borrowing Costs (weight: 0.70)
+  DGS10 -> JOLTS_Job_Openings: Investment
+Impact (weight: 0.60)
+  DGS10 -> MANEMP: Borrowing Costs (weight: 0.70)
+  DGS10 -> RRSFS: Borrowing Costs (weight: 0.70)
+  DGS10 -> TOTALSA: Borrowing Costs (weight: 0.70)
+  FEDFUNDS -> CIVPART: Labor Market
+Impact (weight: 0.60)
+  FEDFUNDS -> DGS10: Monetary Policy
+Transmission (weight: 0.90)
+  FEDFUNDS -> INDPRO: Interest Rate
+Effect (weight: 0.70)
+  FEDFUNDS -> JOLTS_Job_Openings: Hiring
+Decisions (weight: 0.60)
+  FEDFUNDS -> MANEMP: Interest Rate
+Effect (weight: 0.70)
+  FEDFUNDS -> RRSFS: Interest Rate
+Effect (weight: 0.70)
+  FEDFUNDS -> TOTALSA: Interest Rate
+Effect (weight: 0.70)
+  INDPRO -> JOLTS_Job_Openings: Production
+Needs (weight: 0.70)
+  INDPRO -> MANEMP: Production
+Demand (weight: 0.80)
+  MANEMP -> JOLTS_Job_Openings: Sector
+Employment (weight: 0.70)
+  RRSFS -> JOLTS_Job_Openings: Consumer
+Demand (weight: 0.70)
+  TOTALSA -> JOLTS_Job_Openings: Durable Goods
+Demand (weight: 0.60)

@@ -1,0 +1,176 @@
+================================================================================
+COMPREHENSIVE CAUSAL INFERENCE ANALYSIS: CHATGPT LAUNCH IMPACT
+================================================================================
+
+Intervention Date: 2022-12-01
+Target Variable: JOLTS_Job_Openings
+Pre-period: 2015-01-01 to 2022-11-01
+Post-period: 2022-12-01 to 2025-08-01
+
+================================================================================
+METHODOLOGY EXPLANATION
+================================================================================
+
+This analysis compares four different causal inference methods:
+
+1. CAUSAL IMPACT
+--------------------------------------------------------------------------------
+Causal Impact uses Bayesian Structural Time Series (BSTS) models to estimate
+counterfactual predictions. The methodology:
+  • Fits a BSTS model on pre-intervention data only
+  • The model includes: local level (random walk), local trend, seasonal
+    components, and regression components for covariates
+  • Uses Variational Inference (VI) or Hamiltonian Monte Carlo (HMC) for
+    Bayesian inference
+  • Extrapolates the fitted model to post-intervention period to create
+    counterfactual predictions
+  • Treatment effect = Actual - Counterfactual
+  • Provides full posterior distributions for uncertainty quantification
+
+2. PYMC BAYESIAN STRUCTURAL TIME SERIES
+--------------------------------------------------------------------------------
+This is a custom implementation using PyMC that follows the same general
+approach as Causal Impact but with explicit control over model specification:
+  • Fits model ONLY on pre-intervention data (same as Causal Impact)
+  • Model components: local level (Gaussian random walk), linear trend,
+    monthly seasonal effects, and covariate effects
+  • Uses NUTS (No-U-Turn Sampler) for MCMC sampling
+  • Extrapolates components to post period:
+    - Level: continues random walk from last pre value
+    - Trend: continues linear trend
+    - Seasonal: uses same seasonal coefficients
+    - Covariates: uses actual post values with pre-standardization
+  • Counterfactual = sum of extrapolated components
+  • Treatment effect = Actual - Counterfactual
+
+KEY DIFFERENCES: causalimpact vs PyMC STS
+  • causalimpact: Uses TensorFlow backend, optimized for speed, less
+    customizable model structure
+  • PyMC STS: More flexible, explicit model specification, full control
+    over priors and components, uses PyTensor backend
+  • Both follow the same core methodology: fit on pre, extrapolate to post
+
+3. DIFFERENCE-IN-DIFFERENCES (Bayesian)
+--------------------------------------------------------------------------------
+Bayesian DiD using PyMC:
+  • Fits model ONLY on pre-intervention data (same as Causal Impact)
+  • Uses Bayesian regression with MCMC sampling
+  • Model: Y = α + β₁*time_trend + β₂*controls
+  • Extrapolates fitted model to post period
+  • Treatment effect = Actual - Counterfactual (predicted)
+  • Provides full posterior distributions for uncertainty quantification
+  • Better uncertainty quantification than frequentist approach
+
+KEY DIFFERENCES: Structural Time Series vs Difference-in-Differences
+  • STS methods: Model time series structure explicitly (trend, seasonality),
+    fit only on pre data, extrapolate to post
+  • DiD method: Uses regression framework, fits only on pre data, extrapolates to post
+  • STS: Better for time series with strong trends/seasonality
+  • DiD: Simpler, more interpretable, requires control variables
+  • Both follow the same core methodology: fit on pre, extrapolate to post
+
+4. DOWHY CAUSAL INFERENCE
+--------------------------------------------------------------------------------
+DoWhy is a Python library for causal inference that:
+  • Uses a DAG (Directed Acyclic Graph) to specify causal relationships
+  • Identifies causal effects using backdoor, frontdoor, or instrumental
+    variable criteria
+  • Estimates treatment effects using various methods (regression, matching,
+    propensity score, etc.)
+  • In this analysis: Fits model ONLY on pre-intervention data, then
+    extrapolates to post period (same as other methods)
+  • Uses backdoor linear regression with DAG-based confounder adjustment
+  • Treatment effect = Actual - Counterfactual
+
+================================================================================
+RESULTS SUMMARY
+================================================================================
+
+CAUSAL IMPACT RESULTS
+--------------------------------------------------------------------------------
+Posterior Inference {Causal Impact}
+                          Average            Cumulative
+Actual                    8328.45            274839.0
+Prediction (s.d.)         10291.89 (484.46)  339632.25 (15987.22)
+95% CI                    [9387.47, 11286.53][309786.66, 372455.42]
+
+Absolute effect (s.d.)    -1963.43 (484.46)  -64793.25 (15987.22)
+95% CI                    [-2958.07, -1059.02][-97616.42, -34947.66]
+
+Relative effect (s.d.)    -19.08% (4.71%)    -19.08% (4.71%)
+95% CI                    [-28.74%, -10.29%] [-28.74%, -10.29%]
+
+Posterior tail-area probability p: 0.0
+Posterior prob. of a causal effect: 100.0%
+
+For more details run the command: print(impact.summary('report'))
+Cumulative Effect: -64793.25
+Cumulative Percentage Effect: -19.08%
+RMSE: 654.77
+MAE: 507.04
+
+PYMC BAYESIAN STRUCTURAL TIME SERIES RESULTS
+--------------------------------------------------------------------------------
+                mean      sd   hdi_3%  hdi_97%  mcse_mean  mcse_sd  ess_bulk  ess_tail  r_hat
+sigma_obs    145.671  36.322   66.249  203.211      2.492    1.764     220.0     198.0   1.01
+sigma_level  270.417  34.900  207.887  336.396      1.499    1.067     556.0    1201.0   1.00
+trend_slope   56.260  27.121    5.428  107.010      0.586    0.423    2143.0    2122.0   1.00
+Intervention Effect (Average): -3125.09
+95% CI: [-5149.93, -138.04]
+Cumulative Effect: -103127.88
+Cumulative Percentage Effect: -27.28%
+Pre-period RMSE: 74.08
+Post-period RMSE: 3481.85
+
+DIFFERENCE-IN-DIFFERENCES RESULTS
+--------------------------------------------------------------------------------
+            mean      sd   hdi_3%  hdi_97%  mcse_mean  mcse_sd  ess_bulk  ess_tail  r_hat
+beta[0]   -1.510   6.342  -12.942   10.836      0.179    0.127    1278.0    2153.0    1.0
+beta[1] -268.413  75.410 -405.444 -123.002      1.913    1.358    1551.0    1960.0    1.0
+beta[2]  -30.714  78.844 -180.641  113.946      1.638    1.196    2326.0    2746.0    1.0
+beta[3]   67.292  42.028  -11.857  146.111      0.927    0.656    2057.0    2139.0    1.0
+beta[4]    0.412   0.513   -0.510    1.437      0.013    0.009    1545.0    1835.0    1.0
+beta[5]    0.077   0.010    0.058    0.097      0.000    0.000    1277.0    1905.0    1.0
+beta[6] -268.540  46.938 -361.341 -184.579      0.994    0.703    2217.0    2635.0    1.0
+beta[7]   26.155   5.826   15.193   36.929      0.139    0.100    1775.0    2034.0    1.0
+beta[8]   34.434  84.958 -128.777  190.760      1.538    1.411    3042.0    2643.0    1.0
+sigma    495.352  40.617  419.734  569.430      0.759    0.538    2845.0    2546.0    1.0
+Treatment Effect: -1423.83
+95% CI: [-1977.31, -882.20]
+P-value: 0.0000
+Pre-intervention mean: 7377.66
+Post-intervention mean: 8328.45
+Treatment Effect as % of Post Mean: -17.10%
+
+DOWHY CAUSAL INFERENCE RESULTS
+--------------------------------------------------------------------------------
+Intervention Effect (Average): -1092.84
+95% CI: [-2566.11, 917.57]
+P-value: 0.0000
+Pre-period RMSE: 424.34
+Pre-period MAE: 342.04
+Post-period RMSE: 1501.26
+Post-period MAE: 1267.82
+
+================================================================================
+METHOD COMPARISON
+================================================================================
+
+Cumulative Treatment Effects:
+  Causal Impact: -64793.25
+  PyMC STS: -103127.88
+  DiD: -46986.32
+  DoWhy: -36063.61
+
+================================================================================
+INTERPRETATION
+================================================================================
+
+All methods suggest that ChatGPT launch had a negative impact on job openings.
+The structural time series methods (Causal Impact and PyMC STS) provide
+counterfactual predictions by modeling the time series structure, while
+DiD uses regression to estimate treatment effects, and DoWhy uses DAG-based
+causal identification. All methods follow the same core approach: fit on
+pre-intervention data, extrapolate to post period. The agreement across
+methods strengthens confidence in the findings.
+
